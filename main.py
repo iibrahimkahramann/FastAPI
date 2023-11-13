@@ -1,27 +1,26 @@
 from typing import Union
 
 from fastapi import FastAPI
-from pydantic import BaseModel
 
 app = FastAPI()
 
+account_balance = 1000  # Başlangıç bakiyesi
 
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Union[bool, None] = None
+@app.get("/balance")
+def get_balance():
+    return {"balance": account_balance}
 
+@app.post("/deposit/{amount}")
+def deposit(amount: float):
+    global account_balance
+    account_balance += amount
+    return {"message": f"Deposit successful. New balance: {account_balance}"}
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
-
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id}
+@app.post("/withdraw/{amount}")
+def withdraw(amount: float):
+    global account_balance
+    if amount > account_balance:
+        return {"error": "Insufficient funds"}
+    else:
+        account_balance -= amount
+        return {"message": f"Withdrawal successful. New balance: {account_balance}"}
